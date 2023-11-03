@@ -25,9 +25,9 @@ public class AdminService {
             throw  new ServiceException("Invalid credentials");
         }
 
-        var admin = userRepository.findByCode(dto.getCode());
-        if(!admin.isPresent()){
-            
+        var admin = userRepository.findByLastnameAndFirstname(dto.getLastname(), dto.getFirstname());
+        if(admin.isPresent()){
+            throw new ServiceException("Admin already exists...");
         }
 
         // create the user
@@ -35,7 +35,7 @@ public class AdminService {
                 .role(ERole.ADMIN)
                 .firstname(dto.getFirstname())
                 .lastname(dto.getLastname())
-                .password(passwordEncoder.encode(dto.getCode()))
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .code(dto.getCode())
                 .build();
 

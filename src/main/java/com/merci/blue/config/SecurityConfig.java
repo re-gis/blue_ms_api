@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .authenticationEntryPoint(unauthorizedHandler)
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/v1/admin/**")
+                .requestMatchers("/api/v1/admin/**", "/api/v1/auth/**")
                 .permitAll()
                 .anyRequest()
                 .authenticated()
