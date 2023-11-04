@@ -46,7 +46,19 @@ public class Teacher {
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Course> courses = new ArrayList<>();
 
+
     public void addCourse(Course course) {
-        this.courses.add(course);
+        getCourses().add(course);
+    }
+
+    // ... getter and setter methods ...
+
+    public List<Course> getCourses() {
+        if (courses == null) {
+            courses = new ArrayList<>();
+        }
+        return courses;
     }
 }
+
+

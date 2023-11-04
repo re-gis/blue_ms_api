@@ -1,6 +1,5 @@
 package com.merci.blue.dtos;
 
-import com.merci.blue.entities.Course;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,13 +11,12 @@ import java.util.Date;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterTeacher {
-    private String lastname;
+public class CreateStudentDto {
     private String firstname;
+    private String lastname;
     private Date dob;
-    private String role;
     private String contact;
     private String address;
-    private Long courseId;
     private String gender;
+    private Long parent;
 }

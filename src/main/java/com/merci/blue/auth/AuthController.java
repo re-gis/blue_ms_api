@@ -2,7 +2,6 @@ package com.merci.blue.auth;
 
 
 import com.merci.blue.dtos.LoginDto;
-import com.merci.blue.dtos.RegisterDto;
 import com.merci.blue.exceptions.ServiceException;
 import com.merci.blue.response.ApiResponse;
 import com.merci.blue.utils.ResponseHandler;

@@ -1,9 +1,7 @@
 package com.merci.blue.auth;
 
 import com.merci.blue.dtos.LoginDto;
-import com.merci.blue.dtos.RegisterDto;
 import com.merci.blue.entities.User;
-import com.merci.blue.enums.ERole;
 import com.merci.blue.exceptions.ServiceException;
 import com.merci.blue.repositories.UserRepository;
 import com.merci.blue.response.ApiResponse;

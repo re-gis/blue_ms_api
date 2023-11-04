@@ -42,5 +42,5 @@ public class Student {
     @OneToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     @JoinColumn(name = "parent_id")
-    private Parent parent;
+    private Parent parent = null;
 }

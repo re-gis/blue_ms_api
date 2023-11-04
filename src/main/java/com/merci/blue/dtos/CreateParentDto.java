@@ -1,6 +1,5 @@
 package com.merci.blue.dtos;
 
-import com.merci.blue.enums.ERole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,10 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterDto {
-    private String lastname;
+public class CreateParentDto {
     private String firstname;
-    private String password;
-    private String email;
-    private String role;
+    private String lastname;
+    private String contact;
+    private Long student;
 }
