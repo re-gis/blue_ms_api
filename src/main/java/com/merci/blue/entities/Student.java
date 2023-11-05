@@ -36,6 +36,11 @@ public class Student {
     @Column(nullable = false)
     private String address;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @JoinColumn(name = "class_id")
+    private Class aClass;
+
     @Enumerated(EnumType.STRING)
     private EGender gender;
 

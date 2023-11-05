@@ -17,6 +17,7 @@ public class CreateStudentDto {
     private Date dob;
     private String contact;
     private String address;
+    private String classname;
     private String gender;
     private Long parent;
 }

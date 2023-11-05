@@ -31,4 +31,9 @@ public class Class {
     @JsonIgnore
     @JoinColumn(name = "teacher_id")
     private Teacher tutor;
+
+    public void addStudent(Student student) {
+        getStudents().add(student);
+    }
+
 }

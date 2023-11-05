@@ -27,4 +27,7 @@ public class Exam {
     private String examdoc;
 
     private String answersheet;
+
+    private String term;
+    private String level;
 }

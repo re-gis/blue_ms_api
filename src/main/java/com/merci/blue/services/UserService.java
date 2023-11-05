@@ -4,6 +4,7 @@ import com.merci.blue.dtos.CreateParentDto;
 import com.merci.blue.dtos.CreateStudentDto;
 import com.merci.blue.dtos.RegisterTeacher;
 import com.merci.blue.entities.*;
+import com.merci.blue.entities.Class;
 import com.merci.blue.enums.EGender;
 import com.merci.blue.enums.ERole;
 import com.merci.blue.exceptions.ServiceException;
@@ -29,6 +30,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ParentRepository parentRepository;
     private final StudentRepository studentRepository;
+    private final ClassRepository classRepository;
 
     public ApiResponse registerTeacher(RegisterTeacher dto){
 
@@ -160,7 +162,7 @@ public class UserService {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
-        if(dto.getContact() == null || dto.getLastname() == null || dto.getFirstname() == null || dto.getDob() == null || dto.getAddress() == null || dto.getGender() == null){
+        if(dto.getContact() == null || dto.getLastname() == null || dto.getFirstname() == null || dto.getClassname() == null || dto.getDob() == null || dto.getAddress() == null || dto.getGender() == null){
             throw new ServiceException("All student details are required!");
         }
 
@@ -169,6 +171,9 @@ public class UserService {
             throw new ServiceException("Student already exists!");
         }
 
+        // get class
+        Class cl = classRepository.findByClassnameIgnoreCase(dto.getClassname()).orElseThrow(() -> new ServiceException("Class not found!"));
+
         // create student && user
         var student = Student.builder()
                 .address(dto.getAddress())
@@ -176,6 +181,7 @@ public class UserService {
                 .firstname(dto.getFirstname())
                 .lastname(dto.getLastname())
                 .dob(dto.getDob())
+                .aClass(cl)
                 .build();
 
         if(dto.getGender().equalsIgnoreCase("male")){
@@ -202,6 +208,8 @@ public class UserService {
                 .build();
 
         // save user and student
+        cl.addStudent(student);
+        classRepository.save(cl);
         studentRepository.save(student);
         userRepository.save(u);
 
