@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,13 +37,18 @@ public class ExamService {
         }
 
         Teacher t = teacherRepository.findByFirstnameAndLastname(user.getFirstname(), user.getLastname()).orElseThrow(() -> new ServiceException("Teacher not found!"));
+
         // create exam
         // get course
         Course c = courseRepository.findById(course).orElseThrow(() -> new ServiceException("Course not found!"));
+        Optional<Exam> e = examRepository.findByCourseAndLevelAndTermIgnoreCase(c, level, term);
+        if(e.isPresent()) {
+            throw new ServiceException("Exam for this level in this term already created!");
+        }
         String name = c.getCoursename() + "-" + level + "-" + term;
         String examUrl = uploadDoc.uploadDoc(exam);
         String sheetUrl = uploadDoc.uploadDoc(answer);
-        var e = Exam.builder()
+        var ex = Exam.builder()
                 .course(c)
                 .level(level)
                 .answersheet(sheetUrl)
@@ -51,7 +57,7 @@ public class ExamService {
                 .examname(name)
                 .build();
 
-        examRepository.save(e);
+        examRepository.save(ex);
         return ApiResponse.builder()
                 .success(true)
                 .data(e)

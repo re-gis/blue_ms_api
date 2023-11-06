@@ -22,6 +22,10 @@ public class Result {
     private Class classname;
 
     @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id")
+    private Student student;
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_id")
     private Exam exam;
 
