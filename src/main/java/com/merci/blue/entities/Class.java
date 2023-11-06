@@ -24,6 +24,7 @@ public class Class {
     private String classname;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JsonIgnore
     @JoinColumn(name = "class_students")
     private List<Student> students = new ArrayList<>();
 

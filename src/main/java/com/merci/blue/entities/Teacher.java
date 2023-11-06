@@ -1,5 +1,6 @@
 package com.merci.blue.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.merci.blue.enums.EGender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -44,6 +45,7 @@ public class Teacher {
     private int code;
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Course> courses = new ArrayList<>();
 
 
@@ -51,7 +53,6 @@ public class Teacher {
         getCourses().add(course);
     }
 
-    // ... getter and setter methods ...
 
     public List<Course> getCourses() {
         if (courses == null) {

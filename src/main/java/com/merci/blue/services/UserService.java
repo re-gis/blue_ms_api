@@ -218,4 +218,11 @@ public class UserService {
                 .data(student)
                 .build();
     }
+
+    public ApiResponse getYourAccount(){
+        return ApiResponse.builder()
+                .success(true)
+                .data(getLoggedUser())
+                .build();
+    }
 }

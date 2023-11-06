@@ -1,5 +1,6 @@
 package com.merci.blue.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,7 @@ public class Attandance {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "class_id")
     private Class aClass;
 
@@ -30,5 +32,7 @@ public class Attandance {
     private boolean present;
 
     @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "student_id")
     private Student student;
 }
