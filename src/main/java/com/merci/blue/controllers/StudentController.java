@@ -18,14 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class StudentController {
     private final StudentService studentService;
 
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<Object>> getAllStudents(){
-        try{
-            return ResponseEntity.ok(studentService.getAllStudents());
-        }catch (ServiceException e){
-            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> getOneStudent(@PathVariable("id") Long id){

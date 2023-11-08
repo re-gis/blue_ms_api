@@ -17,24 +17,6 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final UserService userService;
 
-    public ApiResponse getAllStudents() {
-        User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
-            throw new ServiceException("You are not authorised to perform this action");
-        }
-
-        // get all students
-        List<Student> stds = studentRepository.findAll();
-        if(stds.isEmpty()){
-            throw new ServiceException("No students found!");
-        }
-
-        return ApiResponse.builder()
-                .success(true)
-                .data(stds)
-                .build();
-    }
-
     public ApiResponse getOneStudent(Long id){
         return ApiResponse.builder()
                 .success(true)

@@ -9,4 +9,6 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     Optional<Teacher> findOneByContact(String contact);
 
     Optional<Teacher> findByFirstnameAndLastname(String firstname, String lastname);
+
+    Optional<Teacher> findOneById(Long teacherId);
 }

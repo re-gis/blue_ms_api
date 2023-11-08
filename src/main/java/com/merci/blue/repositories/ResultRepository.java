@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface ResultRepository extends JpaRepository<Result, Long> {
     Optional<Result> findByStudentAndExam(Student st, Exam e);
+
+    Optional<Result> findByStudent(Student t);
 }
