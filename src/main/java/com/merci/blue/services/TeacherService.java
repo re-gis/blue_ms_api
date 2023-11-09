@@ -1,23 +1,22 @@
 package com.merci.blue.services;
 
 import com.merci.blue.dtos.RegisterTeacher;
+import com.merci.blue.entities.*;
 import com.merci.blue.entities.Class;
-import com.merci.blue.entities.Course;
-import com.merci.blue.entities.Teacher;
-import com.merci.blue.entities.User;
 import com.merci.blue.enums.EGender;
 import com.merci.blue.enums.ERole;
+import com.merci.blue.enums.EStatus;
 import com.merci.blue.exceptions.ServiceException;
-import com.merci.blue.repositories.ClassRepository;
-import com.merci.blue.repositories.CourseRepository;
-import com.merci.blue.repositories.TeacherRepository;
-import com.merci.blue.repositories.UserRepository;
+import com.merci.blue.repositories.*;
 import com.merci.blue.response.ApiResponse;
+import com.merci.blue.utils.UploadDoc;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +27,9 @@ public class TeacherService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
+    private final LeaveRepository leaveRepository;
+    private final UploadDoc uploadDoc;
+    private final AuthenticationManager authenticationManager;
 
 
 
@@ -116,6 +118,83 @@ public class TeacherService {
         return ApiResponse.builder()
                 .success(true)
                 .data("Teacher profile updated successfully!")
+                .build();
+    }
+
+    // make a leave
+    public ApiResponse makeALeave(MultipartFile letter, String reason) throws IOException, ServiceException {
+        User u = userService.getLoggedUser();
+        if(!u.getRole().equals(ERole.TEACHER)){
+            throw new ServiceException("You are not allowed to perform this action!");
+        }
+
+        if(reason == null || reason.isEmpty() || letter == null) {
+            throw new ServiceException("All leave details are required!");
+        }
+
+        // get teacher
+        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname()).orElseThrow(() -> new ServiceException("Teacher not found!"));
+
+        Optional<Leave> l = leaveRepository.findByTeacher(t);
+        if(l.isPresent()){
+            throw new ServiceException("Leave already made...");
+        }
+
+        // upload a letter
+        String doc = uploadDoc.uploadDoc(letter);
+        if(doc == null){
+            throw new ServiceException("Error while uploading the letter...");
+        }
+
+        // create leave
+        var leave = Leave.builder()
+                .reason(reason)
+                .resignationLetter(doc)
+                .status(EStatus.PENDING)
+                .teacher(t)
+                .build();
+
+        leaveRepository.save(leave);
+
+        return ApiResponse
+                .builder()
+                .success(true)
+                .data("Leave is made successfully...")
+                .build();
+    }
+
+    public ApiResponse deleteLeave(Long leave, String password) {
+        User u = userService.getLoggedUser();
+        if(!u.getRole().equals(ERole.TEACHER)){
+            throw new ServiceException("You are not authorised to perform this action!");
+        }
+
+        if(password == null || password.isEmpty()){
+            throw new ServiceException("Password is required!");
+        }
+
+        // get teacher
+        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname()).orElseThrow(()-> new ServiceException("Teacher not found!"));
+
+        // get the leave
+        Leave l = leaveRepository.findById(leave).orElseThrow(() -> new ServiceException("No leave found!"));
+
+        if(!l.getTeacher().getId().equals(t.getId())){
+            throw new ServiceException("You are not allowed to delete this leave");
+        }
+
+
+        var auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(u.getCode(), password)
+        );
+        if(!auth.isAuthenticated()) {
+            throw  new ServiceException("Authentication failed");
+        }
+
+        leaveRepository.delete(l);
+        return ApiResponse.builder()
+                .success(true)
+                .data("Leave deleted successfully...")
                 .build();
     }
 }

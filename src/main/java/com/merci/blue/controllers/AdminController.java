@@ -1,5 +1,6 @@
 package com.merci.blue.controllers;
 
+import com.merci.blue.dtos.AssignCourseDto;
 import com.merci.blue.dtos.DeleteStDto;
 import com.merci.blue.dtos.DeleteTrDto;
 import com.merci.blue.dtos.RegisterAdminDto;
@@ -63,6 +64,56 @@ public class AdminController {
         try{
             return ResponseEntity.ok(adminService.deleteStudent(id, dto.getPassword()));
         }catch (ServiceException e) {
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/assign/{courseId}")
+    public ResponseEntity<ApiResponse<Object>> assignCourseToTr(@PathVariable("courseId") Long courseId, @RequestBody AssignCourseDto dto){
+        try{
+            return ResponseEntity.ok(adminService.assignCourseToTr(dto.getTeacherId(), courseId));
+        }catch (ServiceException e){
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/teachers/leaves")
+    public ResponseEntity<ApiResponse<Object>> getALlTrLeaves() {
+        try{
+            return ResponseEntity.ok(adminService.getAllTrLeaves());
+        }catch (ServiceException e) {
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/teachers/leaves/search")
+    public ResponseEntity<ApiResponse<Object>> getLeavesByStatus(@RequestParam(name = "status") String status){
+        try{
+            // get query
+            if(status != null || !status.isEmpty()){
+                return ResponseEntity.ok(adminService.getLeavesByStatus(status));
+            }else {
+                return ResponseEntity.ok(adminService.getAllTrLeaves());
+            }
+        }catch (ServiceException e){
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/teachers/leaves/approve/{id}")
+    public ResponseEntity<ApiResponse<Object>> approveLeave(@PathVariable("id") Long id){
+        try{
+            return ResponseEntity.ok(adminService.approveLeave(id));
+        }catch (ServiceException e){
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/teachers/leaves/reject/{id}")
+    public ResponseEntity<ApiResponse<Object>> rejectLeave(@PathVariable("id") Long id){
+        try{
+            return ResponseEntity.ok(adminService.rejectLeave(id));
+        }catch (ServiceException e){
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

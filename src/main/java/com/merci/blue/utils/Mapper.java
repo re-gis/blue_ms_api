@@ -2,6 +2,7 @@ package com.merci.blue.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.merci.blue.dtos.CreateExamDto;
+import com.merci.blue.dtos.CreateLeaveDto;
 import com.merci.blue.dtos.CreateResultDto;
 import com.merci.blue.exceptions.ServiceException;
 
@@ -21,6 +22,14 @@ public class Mapper {
     public static CreateResultDto getDtoFromDetailsForResult(String string){
         try{
             return mapper.readValue(string, CreateResultDto.class);
+        }catch (IOException e){
+            throw new ServiceException("Error while mapping the details!");
+        }
+    }
+
+    public static CreateLeaveDto getDtoFromDetailsForLeave(String string) {
+        try{
+            return mapper.readValue(string, CreateLeaveDto.class);
         }catch (IOException e){
             throw new ServiceException("Error while mapping the details!");
         }

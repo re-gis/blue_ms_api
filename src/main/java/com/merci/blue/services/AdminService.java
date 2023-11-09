@@ -4,6 +4,7 @@ import com.merci.blue.dtos.RegisterAdminDto;
 import com.merci.blue.entities.*;
 import com.merci.blue.entities.Class;
 import com.merci.blue.enums.ERole;
+import com.merci.blue.enums.EStatus;
 import com.merci.blue.exceptions.ServiceException;
 import com.merci.blue.repositories.*;
 import com.merci.blue.response.ApiResponse;
@@ -34,6 +35,7 @@ public class AdminService {
     private final AttandanceRepository attandanceRepository;
     private final ParentRepository parentRepository;
     private final ResultRepository resultRepository;
+    private final LeaveRepository leaveRepository;
 
     public ApiResponse registerAdmin(RegisterAdminDto dto) {
         if(dto.getPassword() == null || dto.getCode() == null || dto.getFirstname() == null || dto.getLastname() == null){
@@ -205,6 +207,124 @@ public class AdminService {
         return ApiResponse.builder()
                 .success(true)
                 .data("Student account deleted successfully...")
+                .build();
+    }
+
+
+    // assign teacher a course
+    public ApiResponse assignCourseToTr(Long teacherId, Long courseId){
+        User user = userService.getLoggedUser();
+        if(!user.getRole().equals(ERole.ADMIN)){
+            throw new ServiceException("You are not authorised to perform this action!");
+        }
+
+        // get teacher && course
+        Teacher t = teacherRepository.findById(teacherId).orElseThrow(() -> new ServiceException("Teacher not found!"));
+        Course c = courseRepository.findById(courseId).orElseThrow(() -> new ServiceException("Course not found!"));
+
+        // if found
+        t.addCourse(c);
+        c.setTeacher(t);
+        teacherRepository.save(t);
+        courseRepository.save(c);
+        return ApiResponse.builder()
+                .success(true)
+                .data(String.format("Course assigned to teacher %s", t.getFirstname()))
+                .build();
+    }
+
+    /* LEAVE MANAGEMENT */
+
+    public ApiResponse getAllTrLeaves() {
+        User u = userService.getLoggedUser();
+        if(!u.getRole().equals(ERole.ADMIN)){
+            throw new ServiceException("You are not authorised to perform this action!");
+        }
+
+        // get the leaves
+        List<Leave> leaves = leaveRepository.findAll();
+        if(leaves.isEmpty()){
+            throw new ServiceException("No leaving letters found!");
+        }
+
+        return ApiResponse.builder()
+                .success(true)
+                .data(leaves)
+                .build();
+    }
+
+    public ApiResponse getLeavesByStatus(String status){
+        EStatus st;
+        User u = userService.getLoggedUser();
+        if(!u.getRole().equals(ERole.ADMIN)){
+            throw new ServiceException("You are not authorised to perform this action!");
+        }
+
+        switch (status.toLowerCase()){
+            case "approved":
+                st = EStatus.APPROVED;
+                break;
+
+            case "pending":
+                st = EStatus.PENDING;
+                break;
+
+            case "rejected":
+                st = EStatus.REJECTED;
+                break;
+
+            default:
+                throw new ServiceException("Status not allowed");
+        }
+
+        // get the leaves
+        List<Leave> leaves = leaveRepository.findAllByStatus(st);
+        if(leaves.isEmpty()){
+            throw new ServiceException(String.format("No %s leaving letters found!", st));
+        }
+
+        return ApiResponse.builder()
+                .success(true)
+                .data(leaves)
+                .build();
+    }
+
+    // approve
+    public ApiResponse approveLeave(Long leave){
+        User u = userService.getLoggedUser();
+        if(!u.getRole().equals(ERole.ADMIN)){
+            throw new ServiceException("You are not authorised to perform this action");
+        }
+
+        // approve
+        Leave l = leaveRepository.findById(leave).orElseThrow(() -> new ServiceException("Leave not found!"));
+        if(l.getStatus().equals(EStatus.APPROVED)){
+            throw new ServiceException("Leave already approved...");
+        }
+        l.setStatus(EStatus.APPROVED);
+        leaveRepository.save(l);
+        return ApiResponse.builder()
+                .success(true)
+                .data("Leave approved successfully...")
+                .build();
+    }
+
+    public ApiResponse rejectLeave(Long leave) {
+        User u = userService.getLoggedUser();
+        if(!u.getRole().equals(ERole.ADMIN)){
+            throw new ServiceException("You are not authorised to perform this action");
+        }
+
+        Leave l = leaveRepository.findById(leave).orElseThrow(() -> new ServiceException("Leave not found!"));
+        if(l.getStatus().equals(EStatus.REJECTED)){
+            throw new ServiceException("Leave already rejected...");
+        }
+
+        l.setStatus(EStatus.REJECTED);
+        leaveRepository.save(l);
+        return ApiResponse.builder()
+                .success(true)
+                .data("Leave rejected successfully...")
                 .build();
     }
 }
