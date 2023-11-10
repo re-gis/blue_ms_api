@@ -27,22 +27,24 @@ public class ExamService {
     private final CourseRepository courseRepository;
     private final UploadDoc uploadDoc;
 
-    public ApiResponse createExam(String level, String term, Long course, MultipartFile exam, MultipartFile answer) throws IOException, ServiceException {
-        if(term == null || level == null || exam == null || answer == null || course == null){
+    public ApiResponse<Object> createExam(String level, String term, Long course, MultipartFile exam,
+            MultipartFile answer) throws IOException, ServiceException {
+        if (term == null || level == null || exam == null || answer == null || course == null) {
             throw new ServiceException("All exam details are required!");
         }
         User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.TEACHER)){
+        if (!user.getRole().equals(ERole.TEACHER)) {
             throw new ServiceException("You are not allowed to perform this action!");
         }
 
-        Teacher t = teacherRepository.findByFirstnameAndLastname(user.getFirstname(), user.getLastname()).orElseThrow(() -> new ServiceException("Teacher not found!"));
+        Teacher t = teacherRepository.findByFirstnameAndLastname(user.getFirstname(), user.getLastname())
+                .orElseThrow(() -> new ServiceException("Teacher not found!"));
 
         // create exam
         // get course
         Course c = courseRepository.findById(course).orElseThrow(() -> new ServiceException("Course not found!"));
         Optional<Exam> e = examRepository.findByCourseAndLevelAndTermIgnoreCase(c, level, term);
-        if(e.isPresent()) {
+        if (e.isPresent()) {
             throw new ServiceException("Exam for this level in this term already created!");
         }
         String name = c.getCoursename() + "-" + level + "-" + term;

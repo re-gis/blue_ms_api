@@ -21,24 +21,25 @@ public class ClassService {
     private final TeacherRepository teacherRepository;
     private final UserService userService;
 
-    public ApiResponse createClass(CreateClassDto dto){
+    public ApiResponse<Object> createClass(CreateClassDto dto) {
         User u = userService.getLoggedUser();
-        if(!u.getRole().equals(ERole.ADMIN)){
+        if (!u.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not allowed to perform this action!");
         }
 
-        if(dto.getTutor() == null | dto.getClassname() == null){
+        if (dto.getTutor() == null | dto.getClassname() == null) {
             throw new ServiceException("All class details are required!");
         }
 
         // check if class exists
         Optional<Class> cl = classRepository.findByClassname(dto.getClassname());
 
-        if(cl.isPresent()){
+        if (cl.isPresent()) {
             throw new ServiceException("Class already exists");
         }
 
-        Teacher tutor = teacherRepository.findById(dto.getTutor()).orElseThrow(() -> new ServiceException("Tutor not found!"));
+        Teacher tutor = teacherRepository.findById(dto.getTutor())
+                .orElseThrow(() -> new ServiceException("Tutor not found!"));
 
         // create class
         var c = Class.builder()

@@ -24,38 +24,59 @@ public class TeacherController {
     private final TeacherService teacherService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getOneTeacher(@PathVariable("id") Long id){
-        try{
+    public ResponseEntity<ApiResponse<Object>> getOneTeacher(@PathVariable("id") Long id) {
+        try {
             return ResponseEntity.ok(teacherService.getOneTeacher(id));
-        }catch (ServiceException e){
+        } catch (ServiceException e) {
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PatchMapping("/update/{id}")
-    public ResponseEntity<ApiResponse<Object>> updateTeacher(@RequestBody RegisterTeacher dto, @PathVariable("id") Long id) {
-        try{
+    public ResponseEntity<ApiResponse<Object>> updateTeacher(@RequestBody RegisterTeacher dto,
+            @PathVariable("id") Long id) {
+        try {
             return ResponseEntity.ok(teacherService.updateTrProfile(dto, id));
-        }catch (ServiceException e) {
+        } catch (ServiceException e) {
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/leave/create")
-    public ResponseEntity<ApiResponse<Object>> createALeave(@RequestParam("letter") MultipartFile letter,@RequestParam("details") String string) throws IOException, ServiceException {
-        try{
+    public ResponseEntity<ApiResponse<Object>> createALeave(@RequestParam("letter") MultipartFile letter,
+            @RequestParam("details") String string) throws IOException, ServiceException {
+        try {
             // map the req body
             CreateLeaveDto dto = Mapper.getDtoFromDetailsForLeave(string);
             return ResponseEntity.ok(teacherService.makeALeave(letter, dto.getReason()));
-        }catch (ServiceException e) {
+        } catch (ServiceException e) {
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @DeleteMapping("/leave/delete/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteLeave(@PathVariable("id") Long id,@RequestBody DeleteStDto dto){
-        try{
+    public ResponseEntity<ApiResponse<Object>> deleteLeave(@PathVariable("id") Long id, @RequestBody DeleteStDto dto) {
+        try {
             return ResponseEntity.ok(teacherService.deleteLeave(id, dto.getPassword()));
-        }catch (ServiceException e){
+        } catch (ServiceException e) {
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/my-students")
+    public ResponseEntity<ApiResponse<Object>> getMyStudents() {
+        try {
+            return ResponseEntity.ok(teacherService.getMyStundents());
+        } catch (ServiceException e) {
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/delete/my-account")
+    public ResponseEntity<ApiResponse<Object>> deleteMyAccount(@RequestBody DeleteTrDto dto){
+        try{
+            return ResponseEntity.ok(teacherService.deleteMyAccount(dto.getPassword()));
+        }catch(ServiceException e){
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

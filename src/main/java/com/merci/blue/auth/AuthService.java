@@ -9,28 +9,25 @@ import com.merci.blue.services.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public ApiResponse loginUser(LoginDto dto) {
+    public ApiResponse<Object> loginUser(LoginDto dto) {
         if (dto.getCode() == null || dto.getPassword() == null) {
             throw new ServiceException("All credentials are required!");
         }
 
         var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(dto.getCode(), dto.getPassword())
-        );
+                new UsernamePasswordAuthenticationToken(dto.getCode(), dto.getPassword()));
 
-        if(!auth.isAuthenticated()) {
-            throw  new ServiceException("Authentication failed");
+        if (!auth.isAuthenticated()) {
+            throw new ServiceException("Authentication failed");
         }
 
         User user = userRepository.findByCode(dto.getCode()).orElseThrow(() -> new ServiceException("User not found!"));

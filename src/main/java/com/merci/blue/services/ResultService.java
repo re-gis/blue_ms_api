@@ -24,15 +24,17 @@ public class ResultService {
     private final UserService userService;
     private final StudentRepository studentRepository;
 
-    public ApiResponse createResultDoc(MultipartFile result, Long classId, Long examId, Long stId)throws IOException, ServiceException {
+    public ApiResponse<Object> createResultDoc(MultipartFile result, Long classId, Long examId, Long stId)
+            throws IOException, ServiceException {
         // user logged in
         User user = userService.getLoggedUser();
 
         // get teacher
-        Teacher t = teacherRepository.findByFirstnameAndLastname(user.getFirstname(), user.getLastname()).orElseThrow(() -> new ServiceException("Teacher not found!"));
+        Teacher t = teacherRepository.findByFirstnameAndLastname(user.getFirstname(), user.getLastname())
+                .orElseThrow(() -> new ServiceException("Teacher not found!"));
         // get class
         Class c = classRepository.findByTutor(t).orElseThrow(() -> new ServiceException("Class not found!"));
-        if(!c.getTutor().equals(t)){
+        if (!c.getTutor().equals(t)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
@@ -40,7 +42,7 @@ public class ResultService {
         Student st = studentRepository.findById(stId).orElseThrow(() -> new ServiceException("Student not found!"));
 
         // check if student exists in class
-        if(!c.getStudents().contains(st)){
+        if (!c.getStudents().contains(st)) {
             throw new ServiceException("Student not found in this class");
         }
 
@@ -49,8 +51,8 @@ public class ResultService {
 
         // check if the student result isn't created
         Optional<Result> rs = resultRepository.findByStudentAndExam(st, e);
-        if(rs.isPresent()) {
-            if(rs.get().getExam().getTerm().equals(e.getTerm())){
+        if (rs.isPresent()) {
+            if (rs.get().getExam().getTerm().equals(e.getTerm())) {
                 throw new ServiceException("Student already has results!");
             }
         }

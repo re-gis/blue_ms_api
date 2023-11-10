@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.rmi.ServerException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,10 +32,9 @@ public class TeacherService {
     private final LeaveRepository leaveRepository;
     private final UploadDoc uploadDoc;
     private final AuthenticationManager authenticationManager;
+    private final ClassRepository classRepository;
 
-
-
-    public ApiResponse getOneTeacher(Long id){
+    public ApiResponse<Object> getOneTeacher(Long id) {
         return ApiResponse.builder()
                 .success(true)
                 .data(teacherRepository.findById(id).orElseThrow(() -> new ServiceException("Teacher not found!")))
@@ -41,14 +42,16 @@ public class TeacherService {
     }
 
     // update teacher profile
-    public ApiResponse updateTrProfile(RegisterTeacher dto, Long teacherId){
+    public ApiResponse<Object> updateTrProfile(RegisterTeacher dto, Long teacherId) {
         // get teacher
-        Teacher t = teacherRepository.findOneById(teacherId).orElseThrow(() -> new ServiceException("Teacher not found!"));
-        User u = userRepository.findByLastnameAndFirstnameAndRoleNot(t.getLastname(), t.getFirstname(), ERole.STUDENT).orElseThrow(() -> new ServiceException("User not found!"));
+        Teacher t = teacherRepository.findOneById(teacherId)
+                .orElseThrow(() -> new ServiceException("Teacher not found!"));
+        User u = userRepository.findByLastnameAndFirstnameAndRoleNot(t.getLastname(), t.getFirstname(), ERole.STUDENT)
+                .orElseThrow(() -> new ServiceException("User not found!"));
 
-        if(dto.getGender() != null && dto.getGender() != ""){
+        if (dto.getGender() != null && dto.getGender() != "") {
             String g = dto.getGender().toLowerCase();
-            switch (g){
+            switch (g) {
                 case "male":
                     t.setGender(EGender.MALE);
                     break;
@@ -66,10 +69,10 @@ public class TeacherService {
             }
         }
 
-        if(dto.getRole() !=null && dto.getRole() !=""){
+        if (dto.getRole() != null && dto.getRole() != "") {
             String r = dto.getRole().toLowerCase();
 
-            switch (r){
+            switch (r) {
                 case "admin":
                     u.setRole(ERole.ADMIN);
                     break;
@@ -81,33 +84,34 @@ public class TeacherService {
             }
         }
 
-        if(dto.getLastname() != null && dto.getLastname() != ""){
+        if (dto.getLastname() != null && dto.getLastname() != "") {
             t.setLastname(dto.getLastname());
             u.setLastname(dto.getLastname());
         }
 
-        if(dto.getFirstname() !=null && dto.getFirstname()!=""){
+        if (dto.getFirstname() != null && dto.getFirstname() != "") {
             t.setFirstname(dto.getFirstname());
             u.setFirstname(dto.getFirstname());
         }
 
-        if(dto.getContact() != null && dto.getContact() != ""){
+        if (dto.getContact() != null && dto.getContact() != "") {
             t.setContact(dto.getContact());
         }
 
-        if(dto.getAddress() != null && dto.getAddress() != ""){
+        if (dto.getAddress() != null && dto.getAddress() != "") {
             t.setAddress(dto.getAddress());
         }
 
-        if(dto.getCourseId() !=null && dto.getCourseId() != 0){
+        if (dto.getCourseId() != null && dto.getCourseId() != 0) {
             // get course
-            Course c = courseRepository.findById(dto.getCourseId()).orElseThrow(() -> new ServiceException("Course not found!"));
+            Course c = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new ServiceException("Course not found!"));
             t.addCourse(c);
             c.setTeacher(t);
             courseRepository.save(c);
         }
 
-        if(dto.getDob() != null){
+        if (dto.getDob() != null) {
             t.setDob(dto.getDob());
         }
 
@@ -122,27 +126,28 @@ public class TeacherService {
     }
 
     // make a leave
-    public ApiResponse makeALeave(MultipartFile letter, String reason) throws IOException, ServiceException {
+    public ApiResponse<Object> makeALeave(MultipartFile letter, String reason) throws IOException, ServiceException {
         User u = userService.getLoggedUser();
-        if(!u.getRole().equals(ERole.TEACHER)){
+        if (!u.getRole().equals(ERole.TEACHER)) {
             throw new ServiceException("You are not allowed to perform this action!");
         }
 
-        if(reason == null || reason.isEmpty() || letter == null) {
+        if (reason == null || reason.isEmpty() || letter == null) {
             throw new ServiceException("All leave details are required!");
         }
 
         // get teacher
-        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname()).orElseThrow(() -> new ServiceException("Teacher not found!"));
+        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname())
+                .orElseThrow(() -> new ServiceException("Teacher not found!"));
 
         Optional<Leave> l = leaveRepository.findByTeacher(t);
-        if(l.isPresent()){
+        if (l.isPresent()) {
             throw new ServiceException("Leave already made...");
         }
 
         // upload a letter
         String doc = uploadDoc.uploadDoc(letter);
-        if(doc == null){
+        if (doc == null) {
             throw new ServiceException("Error while uploading the letter...");
         }
 
@@ -163,38 +168,105 @@ public class TeacherService {
                 .build();
     }
 
-    public ApiResponse deleteLeave(Long leave, String password) {
+    public ApiResponse<Object> deleteLeave(Long leave, String password) {
         User u = userService.getLoggedUser();
-        if(!u.getRole().equals(ERole.TEACHER)){
+        if (!u.getRole().equals(ERole.TEACHER)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
-        if(password == null || password.isEmpty()){
+        if (password == null || password.isEmpty()) {
             throw new ServiceException("Password is required!");
         }
 
         // get teacher
-        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname()).orElseThrow(()-> new ServiceException("Teacher not found!"));
+        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname())
+                .orElseThrow(() -> new ServiceException("Teacher not found!"));
 
         // get the leave
         Leave l = leaveRepository.findById(leave).orElseThrow(() -> new ServiceException("No leave found!"));
 
-        if(!l.getTeacher().getId().equals(t.getId())){
+        if (!l.getTeacher().getId().equals(t.getId())) {
             throw new ServiceException("You are not allowed to delete this leave");
         }
 
-
         var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(u.getCode(), password)
-        );
-        if(!auth.isAuthenticated()) {
-            throw  new ServiceException("Authentication failed");
+                new UsernamePasswordAuthenticationToken(u.getCode(), password));
+        if (!auth.isAuthenticated()) {
+            throw new ServiceException("Authentication failed");
         }
 
         leaveRepository.delete(l);
         return ApiResponse.builder()
                 .success(true)
                 .data("Leave deleted successfully...")
+                .build();
+    }
+
+    // get a list of all students in his||her class
+    public ApiResponse<Object> getMyStundents() {
+        User u = userService.getLoggedUser();
+        if (!u.getRole().equals(ERole.TEACHER)) {
+            throw new ServiceException("You are not allowed to perform this action...");
+        }
+
+        // get the teacher
+        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname())
+                .orElseThrow(() -> new ServiceException("Teacher not found!"));
+        // get his class
+        Class c = classRepository.findByTutor(t).orElseThrow(() -> new ServiceException(
+                String.format("No class found for %s %s", t.getFirstname(), t.getLastname())));
+
+        List<Student> students = c.getStudents();
+        if (students.isEmpty()) {
+            throw new ServiceException("Class is empty!");
+        }
+
+        return ApiResponse.builder()
+                .success(true)
+                .data(students)
+                .build();
+    }
+
+    public ApiResponse<Object> deleteMyAccount(String password) {
+        User u = userService.getLoggedUser();
+        if (!u.getRole().equals(ERole.TEACHER)) {
+            throw new ServiceException("You are not allowed to perform this action...");
+        }
+
+        if (password == null || password.isEmpty()) {
+            throw new ServiceException("Password required to delete the account");
+        }
+
+        // authenticate
+        var auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(u.getCode(), password));
+
+        if (!auth.isAuthenticated()) {
+            throw new ServiceException("Authentication failed...");
+        }
+
+        Teacher t = teacherRepository.findByFirstnameAndLastname(u.getFirstname(), u.getLastname())
+                .orElseThrow(() -> new ServiceException("No teacher found!"));
+
+        Optional<Class> c = classRepository.findByTutor(t);
+        if (c.isPresent()) {
+            c.get().setTutor(null);
+        }
+
+        Course course = null;
+        for (Course co : t.getCourses()) {
+            // find the course
+            course = courseRepository.findById(co.getId()).orElseThrow(() -> new ServiceException("Course not found!"));
+            course.setTeacher(null);
+        }
+        courseRepository.save(course);
+        
+        // delete account
+        teacherRepository.delete(t);
+        classRepository.save(c.get());
+        userRepository.delete(u);
+        return ApiResponse.builder()
+                .success(true)
+                .data("Student account deleted successfully...")
                 .build();
     }
 }

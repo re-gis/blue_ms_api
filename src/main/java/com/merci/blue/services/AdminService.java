@@ -37,17 +37,18 @@ public class AdminService {
     private final ResultRepository resultRepository;
     private final LeaveRepository leaveRepository;
 
-    public ApiResponse registerAdmin(RegisterAdminDto dto) {
-        if(dto.getPassword() == null || dto.getCode() == null || dto.getFirstname() == null || dto.getLastname() == null){
-            throw  new ServiceException("All admin details are required");
+    public ApiResponse<Object> registerAdmin(RegisterAdminDto dto) {
+        if (dto.getPassword() == null || dto.getCode() == null || dto.getFirstname() == null
+                || dto.getLastname() == null) {
+            throw new ServiceException("All admin details are required");
         }
 
-        if(!dto.getPassword().equals("admin@password") || !dto.getCode().equals("admin")) {
-            throw  new ServiceException("Invalid credentials");
+        if (!dto.getPassword().equals("admin@password") || !dto.getCode().equals("admin")) {
+            throw new ServiceException("Invalid credentials");
         }
 
         var admin = userRepository.findByLastnameAndFirstname(dto.getLastname(), dto.getFirstname());
-        if(admin.isPresent()){
+        if (admin.isPresent()) {
             throw new ServiceException("Admin already exists...");
         }
 
@@ -68,18 +69,17 @@ public class AdminService {
                 .build();
     }
 
-
     /* TEACHER */
 
-    public ApiResponse getAllTeachers(){
+    public ApiResponse<Object> getAllTeachers() {
         User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
         // return all teachers
         List<Teacher> teachers = teacherRepository.findAll();
-        if(teachers.isEmpty()) {
+        if (teachers.isEmpty()) {
             throw new ServiceException("No teachers found!");
         }
         return ApiResponse.builder()
@@ -88,38 +88,36 @@ public class AdminService {
                 .build();
     }
 
-
-
     // delete the teacher
-    public ApiResponse deleteTeacher(Long teacherId, String password){
+    public ApiResponse<Object> deleteTeacher(Long teacherId, String password) {
         User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not allowed to perform this action");
         }
 
         // authenticate the admin
-        if(password == null || password ==""){
+        if (password == null || password == "") {
             throw new ServiceException("Enter the password to delete the user");
         }
 
         var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken("admin", password)
-        );
-        if(!auth.isAuthenticated()) {
-            throw  new ServiceException("Authentication failed");
+                new UsernamePasswordAuthenticationToken("admin", password));
+        if (!auth.isAuthenticated()) {
+            throw new ServiceException("Authentication failed");
         }
 
         // delete the teacher
         Teacher t = teacherRepository.findById(teacherId).orElseThrow(() -> new ServiceException("Teacher not found!"));
-        for(Course course: t.getCourses()){
+        for (Course course : t.getCourses()) {
             course.setTeacher(null);
             courseRepository.save(course);
         }
 
-        User u = userRepository.findByLastnameAndFirstnameAndRole(t.getLastname(), t.getFirstname(), ERole.TEACHER).orElseThrow(() -> new ServiceException("Teacher not found in users"));
+        User u = userRepository.findByLastnameAndFirstnameAndRole(t.getLastname(), t.getFirstname(), ERole.TEACHER)
+                .orElseThrow(() -> new ServiceException("Teacher not found in users"));
         userRepository.delete(u);
         Optional<Class> c = classRepository.findByTutor(t);
-        if(c.isPresent()){
+        if (c.isPresent()) {
             c.get().setTutor(null);
             classRepository.save(c.get());
         }
@@ -130,19 +128,41 @@ public class AdminService {
                 .build();
     }
 
+    // assign class to teacher
+    public ApiResponse<Object> assignClass(Long classId, Long teacherId) {
+        User u = userService.getLoggedUser();
+        if (!u.getRole().equals(ERole.ADMIN)) {
+            throw new ServiceException("You are not authorised to perform this action...");
+        }
 
+        if (classId == null || teacherId == null) {
+            throw new ServiceException("Class Id or Teacher Id is required!");
+        }
+
+        Class c = classRepository.findById(classId).orElseThrow(() -> new ServiceException("Class not found!"));
+
+        Teacher t = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new ServiceException("Teacher not found!"));
+            c.setTutor(t);
+            classRepository.save(c);
+            return ApiResponse.builder()
+                    .success(true)
+                    .data(String.format("Class assigned to teacher %s %s", t.getLastname(), t.getFirstname()))
+                    .build();
+
+    }
 
     /* STUDENT */
 
-    public ApiResponse getAllStudents() {
+    public ApiResponse<Object> getAllStudents() {
         User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action");
         }
 
         // get all students
         List<Student> stds = studentRepository.findAll();
-        if(stds.isEmpty()){
+        if (stds.isEmpty()) {
             throw new ServiceException("No students found!");
         }
 
@@ -152,54 +172,54 @@ public class AdminService {
                 .build();
     }
 
-    public ApiResponse deleteStudent(Long id, String password) {
+    public ApiResponse<Object> deleteStudent(Long id, String password) {
         User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
-
         // authenticate the admin
-        if(password == null || password ==""){
+        if (password == null || password == "") {
             throw new ServiceException("Enter the password to delete the student");
         }
 
         var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken("admin", password)
-        );
-        if(!auth.isAuthenticated()) {
-            throw  new ServiceException("Authentication failed");
+                new UsernamePasswordAuthenticationToken("admin", password));
+        if (!auth.isAuthenticated()) {
+            throw new ServiceException("Authentication failed");
         }
 
         // delete the teacher
         Student t = studentRepository.findById(id).orElseThrow(() -> new ServiceException("Student not found!"));
 
         // get his class
-        Class c = classRepository.findById(t.getAClass().getId()).orElseThrow(() -> new ServiceException("Class not found!"));
+        Class c = classRepository.findById(t.getAClass().getId())
+                .orElseThrow(() -> new ServiceException("Class not found!"));
         c.getStudents().remove(t);
         classRepository.save(c);
 
         // get attandance
         Optional<Attandance> at = attandanceRepository.findByStudent(t);
-        if(at.isPresent()){
+        if (at.isPresent()) {
             // delete the attandance
             attandanceRepository.delete(at.get());
         }
 
-        Optional<User> u = userRepository.findByLastnameAndFirstnameAndRole(t.getLastname(), t.getFirstname(), ERole.STUDENT);
-        if(u.isPresent()) {
+        Optional<User> u = userRepository.findByLastnameAndFirstnameAndRole(t.getLastname(), t.getFirstname(),
+                ERole.STUDENT);
+        if (u.isPresent()) {
             userRepository.delete(u.get());
         }
 
         // delete parent
         Optional<Parent> p = parentRepository.findByStudent(t);
-        if(p.isPresent()){
+        if (p.isPresent()) {
             parentRepository.delete(p.get());
         }
 
         // delete the results
         Optional<Result> r = resultRepository.findByStudent(t);
-        if(r.isPresent()){
+        if (r.isPresent()) {
             resultRepository.delete(r.get());
         }
 
@@ -210,11 +230,10 @@ public class AdminService {
                 .build();
     }
 
-
     // assign teacher a course
-    public ApiResponse assignCourseToTr(Long teacherId, Long courseId){
+    public ApiResponse<Object> assignCourseToTr(Long teacherId, Long courseId) {
         User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
@@ -235,15 +254,15 @@ public class AdminService {
 
     /* LEAVE MANAGEMENT */
 
-    public ApiResponse getAllTrLeaves() {
+    public ApiResponse<Object> getAllTrLeaves() {
         User u = userService.getLoggedUser();
-        if(!u.getRole().equals(ERole.ADMIN)){
+        if (!u.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
         // get the leaves
         List<Leave> leaves = leaveRepository.findAll();
-        if(leaves.isEmpty()){
+        if (leaves.isEmpty()) {
             throw new ServiceException("No leaving letters found!");
         }
 
@@ -253,14 +272,14 @@ public class AdminService {
                 .build();
     }
 
-    public ApiResponse getLeavesByStatus(String status){
+    public ApiResponse<Object> getLeavesByStatus(String status) {
         EStatus st;
         User u = userService.getLoggedUser();
-        if(!u.getRole().equals(ERole.ADMIN)){
+        if (!u.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
-        switch (status.toLowerCase()){
+        switch (status.toLowerCase()) {
             case "approved":
                 st = EStatus.APPROVED;
                 break;
@@ -279,7 +298,7 @@ public class AdminService {
 
         // get the leaves
         List<Leave> leaves = leaveRepository.findAllByStatus(st);
-        if(leaves.isEmpty()){
+        if (leaves.isEmpty()) {
             throw new ServiceException(String.format("No %s leaving letters found!", st));
         }
 
@@ -290,15 +309,15 @@ public class AdminService {
     }
 
     // approve
-    public ApiResponse approveLeave(Long leave){
+    public ApiResponse<Object> approveLeave(Long leave) {
         User u = userService.getLoggedUser();
-        if(!u.getRole().equals(ERole.ADMIN)){
+        if (!u.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action");
         }
 
         // approve
         Leave l = leaveRepository.findById(leave).orElseThrow(() -> new ServiceException("Leave not found!"));
-        if(l.getStatus().equals(EStatus.APPROVED)){
+        if (l.getStatus().equals(EStatus.APPROVED)) {
             throw new ServiceException("Leave already approved...");
         }
         l.setStatus(EStatus.APPROVED);
@@ -309,14 +328,14 @@ public class AdminService {
                 .build();
     }
 
-    public ApiResponse rejectLeave(Long leave) {
+    public ApiResponse<Object> rejectLeave(Long leave) {
         User u = userService.getLoggedUser();
-        if(!u.getRole().equals(ERole.ADMIN)){
+        if (!u.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action");
         }
 
         Leave l = leaveRepository.findById(leave).orElseThrow(() -> new ServiceException("Leave not found!"));
-        if(l.getStatus().equals(EStatus.REJECTED)){
+        if (l.getStatus().equals(EStatus.REJECTED)) {
             throw new ServiceException("Leave already rejected...");
         }
 

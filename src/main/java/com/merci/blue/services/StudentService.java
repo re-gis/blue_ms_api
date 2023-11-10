@@ -17,10 +17,12 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final UserService userService;
 
-    public ApiResponse getOneStudent(Long id){
+    public ApiResponse<Object> getOneStudent(Long id) {
         return ApiResponse.builder()
                 .success(true)
                 .data(studentRepository.findById(id).orElseThrow(() -> new ServiceException("Student not found!")))
                 .build();
     }
+
+    // public ApiResponse<Object> deleteStudent()
 }

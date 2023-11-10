@@ -32,21 +32,22 @@ public class UserService {
     private final StudentRepository studentRepository;
     private final ClassRepository classRepository;
 
-    public ApiResponse registerTeacher(RegisterTeacher dto){
+    public ApiResponse<Object> registerTeacher(RegisterTeacher dto) {
 
-        //check if he is an admin
+        // check if he is an admin
         User user = getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action");
         }
 
-
-        if(dto.getAddress() == null || dto.getDob() == null || dto.getContact() == null || dto.getRole() == null || dto.getFirstname() == null || dto.getLastname() == null || dto.getCourseId() == null || dto.getGender() == null){
+        if (dto.getAddress() == null || dto.getDob() == null || dto.getContact() == null || dto.getRole() == null
+                || dto.getFirstname() == null || dto.getLastname() == null || dto.getCourseId() == null
+                || dto.getGender() == null) {
             throw new ServiceException("ALl teacher details are required!");
         }
 
-        if(!dto.getRole().equalsIgnoreCase("teacher")) {
-            throw  new ServiceException("User role not allowed!, add Teacher as role...");
+        if (!dto.getRole().equalsIgnoreCase("teacher")) {
+            throw new ServiceException("User role not allowed!, add Teacher as role...");
         }
 
         // create the code for the teacher
@@ -58,11 +59,12 @@ public class UserService {
         int randomNumber = random.nextInt(max - min + 1) + min;
 
         Optional<Teacher> t = teacherRepository.findOneByContact(dto.getContact());
-        if(t.isPresent()) {
-            throw  new ServiceException("Teacher already exists");
+        if (t.isPresent()) {
+            throw new ServiceException("Teacher already exists");
         }
 
-        Course course = courseRepository.findById(dto.getCourseId()).orElseThrow(() -> new ServiceException("Course not found!"));
+        Course course = courseRepository.findById(dto.getCourseId())
+                .orElseThrow(() -> new ServiceException("Course not found!"));
 
         // create the teacher
         var teacher = Teacher.builder()
@@ -74,16 +76,15 @@ public class UserService {
                 .code(randomNumber)
                 .build();
 
-        if(dto.getGender().equalsIgnoreCase("male")) {
+        if (dto.getGender().equalsIgnoreCase("male")) {
             teacher.setGender(EGender.MALE);
         } else if (dto.getGender().equalsIgnoreCase("female")) {
             teacher.setGender(EGender.FEMALE);
-        }else {
+        } else {
             teacher.setGender(EGender.OTHER);
         }
 
         teacher.addCourse(course);
-
 
         // create user
         var eUser = User.builder()
@@ -106,14 +107,14 @@ public class UserService {
     }
 
     public User getLoggedUser() throws ServiceException {
-        if(SecurityContextHolder.getContext().getAuthentication().getPrincipal()== "anonymousUser") {
-            throw  new ServiceException(("You are not logged in"));
+        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() == "anonymousUser") {
+            throw new ServiceException(("You are not logged in"));
         }
 
         String code;
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        if(principal instanceof UserDetails) {
+        if (principal instanceof UserDetails) {
             code = ((UserDetails) principal).getUsername();
         } else {
             code = principal.toString();
@@ -121,23 +122,25 @@ public class UserService {
         return userRepository.findByCode(code).orElseThrow(() -> new ServiceException("Could not find user!"));
     }
 
-    public ApiResponse createParent(CreateParentDto dto) {
+    public ApiResponse<Object> createParent(CreateParentDto dto) {
         User user = getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)) {
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
-        if(dto.getContact() == null || dto.getFirstname() == null || dto.getStudent() == null || dto.getLastname() == null){
+        if (dto.getContact() == null || dto.getFirstname() == null || dto.getStudent() == null
+                || dto.getLastname() == null) {
             throw new ServiceException("All parent details are required!");
         }
 
         // check if parent already exists
         Optional<Parent> pr = parentRepository.findOneByContact(dto.getContact());
-        if(pr.isPresent()){
+        if (pr.isPresent()) {
             throw new ServiceException("Parent already exists...");
         }
 
-        Student st = studentRepository.findById(dto.getStudent()).orElseThrow(() -> new ServiceException("Student not found!"));
+        Student st = studentRepository.findById(dto.getStudent())
+                .orElseThrow(() -> new ServiceException("Student not found!"));
 
         // create the parent and update the student
         var parent = Parent.builder()
@@ -156,23 +159,26 @@ public class UserService {
                 .build();
     }
 
-    public ApiResponse createStudent(CreateStudentDto dto) {
+    public ApiResponse<Object> createStudent(CreateStudentDto dto) {
         User user = getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)) {
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException("You are not authorised to perform this action!");
         }
 
-        if(dto.getContact() == null || dto.getLastname() == null || dto.getFirstname() == null || dto.getClassname() == null || dto.getDob() == null || dto.getAddress() == null || dto.getGender() == null){
+        if (dto.getContact() == null || dto.getLastname() == null || dto.getFirstname() == null
+                || dto.getClassname() == null || dto.getDob() == null || dto.getAddress() == null
+                || dto.getGender() == null) {
             throw new ServiceException("All student details are required!");
         }
 
         Optional<Student> st = studentRepository.findOneByContact(dto.getContact());
-        if(st.isPresent()){
+        if (st.isPresent()) {
             throw new ServiceException("Student already exists!");
         }
 
         // get class
-        Class cl = classRepository.findByClassnameIgnoreCase(dto.getClassname()).orElseThrow(() -> new ServiceException("Class not found!"));
+        Class cl = classRepository.findByClassnameIgnoreCase(dto.getClassname())
+                .orElseThrow(() -> new ServiceException("Class not found!"));
 
         // create student && user
         var student = Student.builder()
@@ -184,11 +190,11 @@ public class UserService {
                 .aClass(cl)
                 .build();
 
-        if(dto.getGender().equalsIgnoreCase("male")){
+        if (dto.getGender().equalsIgnoreCase("male")) {
             student.setGender(EGender.MALE);
         } else if (dto.getGender().equalsIgnoreCase("female")) {
             student.setGender(EGender.FEMALE);
-        }else {
+        } else {
             student.setGender(EGender.OTHER);
         }
 
@@ -219,7 +225,7 @@ public class UserService {
                 .build();
     }
 
-    public ApiResponse getYourAccount(){
+    public ApiResponse<Object> getYourAccount() {
         return ApiResponse.builder()
                 .success(true)
                 .data(getLoggedUser())

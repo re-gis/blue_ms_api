@@ -24,13 +24,13 @@ public class CourseService {
     private final UserRepository userRepository;
     private final UserService userService;
 
-    public ApiResponse createACourse(CreateCourseDto dto) {
-        if(dto.getDescription() == null || dto.getCoursename() == null){
+    public ApiResponse<Object> createACourse(CreateCourseDto dto) {
+        if (dto.getDescription() == null || dto.getCoursename() == null) {
             throw new ServiceException("All course details are required!");
         }
 
         User user = userService.getLoggedUser();
-        if(!user.getRole().equals(ERole.ADMIN)){
+        if (!user.getRole().equals(ERole.ADMIN)) {
             throw new ServiceException(("You are not authorised to perform this action!"));
         }
 
@@ -45,7 +45,7 @@ public class CourseService {
         // create the course
         Optional<Course> eC = courseRepository.findByCoursename(dto.getCoursename());
 
-        if(eC.isPresent()){
+        if (eC.isPresent()) {
             throw new ServiceException("Course already exists...");
         }
 
@@ -55,9 +55,10 @@ public class CourseService {
                 .coursename(dto.getCoursename())
                 .build();
 
-        if(dto.getTeacher() != null) {
+        if (dto.getTeacher() != null) {
             // get the teacher
-            Teacher t = teacherRepository.findById(dto.getTeacher()).orElseThrow(() -> new ServiceException("Teacher not found!"));
+            Teacher t = teacherRepository.findById(dto.getTeacher())
+                    .orElseThrow(() -> new ServiceException("Teacher not found!"));
             course.setTeacher(t);
             t.addCourse(course);
             courseRepository.save(course);

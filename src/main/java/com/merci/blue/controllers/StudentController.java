@@ -27,4 +27,6 @@ public class StudentController {
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    
 }
