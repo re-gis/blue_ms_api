@@ -143,12 +143,12 @@ public class AdminService {
 
         Teacher t = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new ServiceException("Teacher not found!"));
-            c.setTutor(t);
-            classRepository.save(c);
-            return ApiResponse.builder()
-                    .success(true)
-                    .data(String.format("Class assigned to teacher %s %s", t.getLastname(), t.getFirstname()))
-                    .build();
+        c.setTutor(t);
+        classRepository.save(c);
+        return ApiResponse.builder()
+                .success(true)
+                .data(String.format("Class assigned to teacher %s %s", t.getLastname(), t.getFirstname()))
+                .build();
 
     }
 
@@ -344,6 +344,40 @@ public class AdminService {
         return ApiResponse.builder()
                 .success(true)
                 .data("Leave rejected successfully...")
+                .build();
+    }
+
+    public ApiResponse<Object> changeStudentClass(Long studentId, Long newClass) {
+        User user = userService.getLoggedUser();
+        if (!user.getRole().equals(ERole.ADMIN)) {
+            throw new ServiceException("You are not authorised to perform this action!");
+        }
+
+        if(newClass == null){
+            throw new ServiceException("New class id required!");
+        }
+
+        // get student
+        Student st = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ServiceException("Student not found!"));
+        // get class
+        Class cl = classRepository.findById(newClass).orElseThrow(() -> new ServiceException("Class not found!"));
+        List<Student> students = cl.getStudents();
+        for (Student s : students) {
+            if (s.equals(st)) {
+                throw new ServiceException(
+                        String.format("Student %s already in class %s...", st.getFirstname(), cl.getClassname()));
+            }
+        }
+
+        cl.addStudent(st);
+        st.setAClass(cl);
+        classRepository.save(cl);
+        studentRepository.save(st);
+
+        return ApiResponse.builder()
+                .success(true)
+                .data("Student class updated successfully...")
                 .build();
     }
 }

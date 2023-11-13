@@ -1,5 +1,6 @@
 package com.merci.blue.controllers;
 
+import com.merci.blue.dtos.AssignClassDto;
 import com.merci.blue.dtos.AssignCourseDto;
 import com.merci.blue.dtos.DeleteStDto;
 import com.merci.blue.dtos.DeleteTrDto;
@@ -120,9 +121,20 @@ public class AdminController {
     }
 
     @PatchMapping("/teachers/assign/class/{id}")
-    public ResponseEntity<ApiResponse<Object>> assignClassTutor(@PathVariable("id") Long classId, @RequestBody AssignCourseDto dto) {
+    public ResponseEntity<ApiResponse<Object>> assignClassTutor(@PathVariable("id") Long classId,
+            @RequestBody AssignCourseDto dto) {
         try {
             return ResponseEntity.ok(adminService.assignClass(classId, dto.getTeacherId()));
+        } catch (ServiceException e) {
+            return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/student/{studentId}/change/class")
+    public ResponseEntity<ApiResponse<Object>> changeStudentClass(@PathVariable("studentId") Long stId,
+            @RequestBody AssignClassDto dto) {
+        try {
+            return ResponseEntity.ok(adminService.changeStudentClass(stId, dto.getClassId()));
         } catch (ServiceException e) {
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -23,6 +23,4 @@ public class StudentService {
                 .data(studentRepository.findById(id).orElseThrow(() -> new ServiceException("Student not found!")))
                 .build();
     }
-
-    // public ApiResponse<Object> deleteStudent()
 }
