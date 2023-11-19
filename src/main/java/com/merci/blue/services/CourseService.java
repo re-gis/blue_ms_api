@@ -70,4 +70,10 @@ public class CourseService {
                 .data(course)
                 .build();
     }
+
+
+//    public ApiResponse<Object> deleteCourse(Long courseId){
+//        User user = userService.getLoggedUser();
+//        if()
+//    }
 }
