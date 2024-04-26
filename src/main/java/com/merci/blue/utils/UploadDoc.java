@@ -16,13 +16,12 @@ public class UploadDoc {
     private final CloudinaryConfig cloudinaryConfig;
 
     public String uploadDoc(MultipartFile doc) throws IOException, ServiceException {
-        if(doc == null){
+        if (doc == null) {
             throw new ServiceException("File cannot be null");
         }
 
         Map<?, ?> uploadResult = cloudinaryConfig.cloudinary().uploader().upload(doc.getBytes(), ObjectUtils.asMap(
-                "resource_type", "raw"
-        ));
+                "resource_type", "raw"));
         return (String) uploadResult.get("url");
     }
 }

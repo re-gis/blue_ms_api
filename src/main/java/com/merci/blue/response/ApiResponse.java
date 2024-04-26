@@ -1,4 +1,5 @@
 package com.merci.blue.response;
+
 import lombok.*;
 
 @Data

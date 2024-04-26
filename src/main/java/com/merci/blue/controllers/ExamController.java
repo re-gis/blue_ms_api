@@ -24,12 +24,15 @@ public class ExamController {
     private final ExamService examService;
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<Object>> createExam(@RequestParam("exam")MultipartFile exam, @RequestParam("answers") MultipartFile answers, @RequestParam("details") String details) throws IOException, ServiceException{
-        try{
+    public ResponseEntity<ApiResponse<Object>> createExam(@RequestParam("exam") MultipartFile exam,
+            @RequestParam("answers") MultipartFile answers, @RequestParam("details") String details)
+            throws IOException, ServiceException {
+        try {
             // map the details
             CreateExamDto dto = Mapper.getDtoFromDetails(details);
-            return ResponseEntity.ok(examService.createExam(dto.getLevel(), dto.getTerm(), dto.getCourse(), exam, answers));
-        }catch (ServiceException e){
+            return ResponseEntity
+                    .ok(examService.createExam(dto.getLevel(), dto.getTerm(), dto.getCourse(), exam, answers));
+        } catch (ServiceException e) {
             return ResponseHandler.error(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
