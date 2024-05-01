@@ -31,6 +31,11 @@ public class AdminController {
 
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("success");
+    }
+
     @GetMapping("/teacher/all")
     public ResponseEntity<ApiResponse<Object>> getALlTeachers() {
         try {
