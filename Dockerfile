@@ -9,7 +9,7 @@ COPY pom.xml .
 COPY src ./src
 
 # Build the application using Maven
-RUN mvn clean package
+RUN mvn clean install
 
 # Use the OpenJDK image as the base image for the runtime environment
 FROM openjdk:8
