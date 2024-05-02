@@ -1,5 +1,5 @@
 # Use a Maven image as the base image for the build stage
-FROM maven:3.8.4-openjdk-8 AS build
+FROM maven:3.8.4-openjdk-17 AS build
 
 # Set the working directory in the container
 WORKDIR /app
