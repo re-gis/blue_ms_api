@@ -1,7 +1,12 @@
-FROM maven:3.8.4-openjdk-17 AS builder
+# Use a Maven image as the base image for the build stage
+FROM maven:3.8.4-openjdk-8 AS build
+
+# Set the working directory in the container
 WORKDIR /app
-COPY . .
-RUN mvn clean package
+
+# Copy the project files into the container
+COPY pom.xml .
+COPY src ./src
 
 # Build the application using Maven
 RUN mvn clean package
