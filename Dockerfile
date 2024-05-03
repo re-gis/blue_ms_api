@@ -25,3 +25,4 @@ EXPOSE 8080
 
 # Define the command to run the Java application
 CMD ["java", "-jar", "blue-0.0.1-SNAPSHOT.jar"]
+
